@@ -141,9 +141,7 @@ export default function BookingPage() {
                                         <MapPin className="w-3 h-3" /> {hall.type} • {hall.capacity} Seats
                                     </div>
                                 </div>
-                                <div className={cn(
-                                    "w-2 h-2 rounded-full",
-                                    Math.random() > 0.2 ? "bg-emerald-500" : "bg-red-500"
+                                "w-2 h-2 rounded-full bg-emerald-500"
                                 )} />
                             </div>
                         </div>
