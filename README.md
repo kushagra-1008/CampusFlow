@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CampusFlow - LNMIIT Resource Hub
+
+CampusFlow is the official (prototype) resource management and communication platform for The LNM Institute of Information Technology (LNMIIT). It bridges the gap between students and faculty with features like Hall Booking, Faculty Availability Matrix, and Academic Chat.
+
+## Features
+
+- **Authentication**: Role-based access for Students (`@lnmiit.ac.in`) and Faculty.
+- **The Flow Dashboard**: Centralized view of pending requests and upcoming schedules.
+- **LT & Hall Booking**: Visual booking engine for Lecture Theaters (LT-1 to LT-19), OAT, and Seminar Halls.
+- **Faculty Availability Matrix**: Real-time status tracking (Available, Busy, In Class) for professors.
+- **Direct Academic Chat**: Real-time messaging simulation for academic queries.
+
+## Tech Stack
+
+- **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS v4 (Alpha/PostCSS)
+- **Icons**: Lucide React
+- **Animations**: Framer Motion
+- **State Management**: React Context (`AuthContext`, `SocketContext`)
 
 ## Getting Started
 
-First, run the development server:
+1.  **Install Dependencies**:
+    ```bash
+    npm install
+    ```
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+2.  **Run Development Server**:
+    ```bash
+    npm run dev
+    ```
+    Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+
+### 3. Firebase Setup (Required for persistence)
+Create a `.env.local` file in the `web` directory with your Firebase project credentials:
+
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_bucket.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 4. Run Development Server
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Context API**:
+    - `AuthContext`: Manages user sessions (mock persisted via LocalStorage).
+    - `SocketContext`: Simulates WebSocket connections (latency, message delivery) for Chat.
+- **Service Layer**:
+    - `services/bookingService`: Abstracts Hall data and booking logic.
+    - `services/facultyService`: Handles faculty directory and status logic.
+- **Mock Data**: Currently, the application uses sophisticated mock data services (`services/*`) that mimic async API calls, preparing the codebase for easy substitution with a real backend (e.g., Supabase/Firebase) in the future.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deployment
 
-## Learn More
+This project is optimized for deployment on **Vercel**.
 
-To learn more about Next.js, take a look at the following resources:
+1.  Push code to GitHub.
+2.  Import project into Vercel.
+3.  Framework Preset: **Next.js**.
+4.  Deploy.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Future Roadmap
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Integrate Supabase for real PostgreSQL database.
+- Replace `SocketContext` simulation with `socket.io` or Supabase Realtime.
+- Implementing Admin role for Approval workflows.

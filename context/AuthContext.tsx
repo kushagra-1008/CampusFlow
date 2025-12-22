@@ -1,0 +1,101 @@
+"use client";
+
+import { createContext, useContext, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { userService } from "@/services/userService";
+
+export type UserRole = "Student" | "Teacher";
+
+export interface User {
+    id: string;
+    name: string;
+    email: string;
+    role: UserRole;
+    details?: string;
+}
+
+interface AuthContextType {
+    user: User | null;
+    isLoading: boolean;
+    login: (email: string, password: string) => Promise<void>;
+    logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+    const [user, setUser] = useState<User | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const router = useRouter();
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem("campusflow_user");
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+        }
+        setIsLoading(false);
+    }, []);
+
+    const login = async (email: string, password: string) => {
+        setIsLoading(true);
+
+        // 1. Validate Password
+        if (password !== "CampusFlow") {
+            setIsLoading(false);
+            throw new Error("Invalid password");
+        }
+
+        // 2. Validate Domain
+        if (!email.endsWith("@lnmiit.ac.in")) {
+            setIsLoading(false);
+            throw new Error("Only @lnmiit.ac.in emails are allowed");
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // 3. Dynamic Role Assignment
+        let role: UserRole = "Student";
+        if (email.startsWith("faculty@")) {
+            role = "Teacher";
+        }
+
+        // 4. Create User Object
+        const mockUser: User = {
+            id: Math.random().toString(36).substr(2, 9),
+            name: email.split("@")[0].replace(".", " ").replace(/\b\w/g, l => l.toUpperCase()),
+            email,
+            role,
+            details: role === "Student" ? "Roll No: Pending" : "Dept: Pending" // Placeholder
+        };
+
+        // 5. Store in "Firestore" (Side Effect - Non-blocking)
+        userService.saveUser(mockUser).catch(err => console.error("Background sync failed:", err));
+
+        // 6. Set State & Persist Local
+        setUser(mockUser);
+        localStorage.setItem("campusflow_user", JSON.stringify(mockUser));
+        setIsLoading(false);
+
+        router.push("/dashboard");
+    };
+
+    const logout = () => {
+        setUser(null);
+        localStorage.removeItem("campusflow_user");
+        router.push("/");
+    };
+
+    return (
+        <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+            {children}
+        </AuthContext.Provider>
+    );
+}
+
+export function useAuth() {
+    const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error("useAuth must be used within an AuthProvider");
+    }
+    return context;
+}
