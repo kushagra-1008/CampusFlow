@@ -1,5 +1,5 @@
 import { db } from "@/lib/firebase";
-import { collection, getDocs, doc, setDoc, query, where, addDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, query, where, addDoc, writeBatch } from "firebase/firestore";
 
 export interface Hall {
     id: string; // "LT-1"
@@ -29,13 +29,13 @@ export const bookingService = {
                 await seedHalls();
                 // Fetch again after seed
                 const newSnapshot = await getDocs(collection(db, HALLS_COLLECTION));
-                return newSnapshot.docs.map(d => d.data() as Hall);
+                return newSnapshot.docs.map(d => d.data() as Hall).sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
             }
 
             return snapshot.docs.map(d => d.data() as Hall).sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
         } catch (error) {
             console.error("Error fetching halls:", error);
-            return [];
+            throw error; // Re-throw to let UI handle it
         }
     },
 
@@ -84,32 +84,30 @@ export const bookingService = {
     }
 };
 
-// Seeding Logic
+// Seeding Logic (Optimized with Batch)
 const seedHalls = async () => {
-    const batchPromises = [];
+    const batch = writeBatch(db);
 
     // LT-1 to LT-19
     for (let i = 1; i <= 19; i++) {
         const id = `LT-${i}`;
-        batchPromises.push(
-            setDoc(doc(db, HALLS_COLLECTION, id), {
-                id,
-                name: `Lecture Theatre ${i}`,
-                capacity: 150 + (i % 3) * 50,
-                type: "Lecture Hall"
-            })
-        );
+        const ref = doc(db, HALLS_COLLECTION, id);
+        batch.set(ref, {
+            id,
+            name: `Lecture Theatre ${i}`,
+            capacity: 150 + (i % 3) * 50,
+            type: "Lecture Hall"
+        });
     }
 
     // OAT
-    batchPromises.push(
-        setDoc(doc(db, HALLS_COLLECTION, "OAT"), {
-            id: "OAT",
-            name: "Open Air Theatre",
-            capacity: 800,
-            type: "Open Air"
-        })
-    );
+    const oatRef = doc(db, HALLS_COLLECTION, "OAT");
+    batch.set(oatRef, {
+        id: "OAT",
+        name: "Open Air Theatre",
+        capacity: 800,
+        type: "Open Air"
+    });
 
-    await Promise.all(batchPromises);
+    await batch.commit();
 };

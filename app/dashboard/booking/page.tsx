@@ -15,11 +15,27 @@ export default function BookingPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isBooking, setIsBooking] = useState(false);
 
+    const [error, setError] = useState<string | null>(null);
+
     useEffect(() => {
-        bookingService.getHalls().then(data => {
-            setHalls(data);
-            setIsLoading(false);
-        });
+        let mounted = true;
+
+        bookingService.getHalls()
+            .then(data => {
+                if (mounted) {
+                    setHalls(data);
+                    setIsLoading(false);
+                }
+            })
+            .catch(err => {
+                if (mounted) {
+                    console.error("Failed to load halls", err);
+                    setError("Failed to load halls. Set up Firebase keys or disable AdBlocker.");
+                    setIsLoading(false);
+                }
+            });
+
+        return () => { mounted = false; };
     }, []);
 
     const filteredHalls = halls.filter(hall =>
@@ -48,6 +64,26 @@ export default function BookingPage() {
 
     if (isLoading) {
         return <div className="flex h-96 items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+    }
+
+    if (error) {
+        return (
+            <div className="flex h-96 flex-col items-center justify-center gap-4 text-center">
+                <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center text-red-600 dark:text-red-400">
+                    <MapPin className="w-6 h-6" />
+                </div>
+                <div>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Unable to Load Venues</h3>
+                    <p className="text-slate-500 dark:text-slate-400 max-w-sm mt-1">{error}</p>
+                </div>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="text-primary hover:underline font-medium text-sm"
+                >
+                    Try Reloading
+                </button>
+            </div>
+        );
     }
 
     return (
