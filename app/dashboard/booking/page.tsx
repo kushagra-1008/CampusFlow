@@ -141,8 +141,7 @@ export default function BookingPage() {
                                         <MapPin className="w-3 h-3" /> {hall.type} • {hall.capacity} Seats
                                     </div>
                                 </div>
-                                "w-2 h-2 rounded-full bg-emerald-500"
-                                )} />
+                                <div className="w-2 h-2 rounded-full bg-emerald-500" />
                             </div>
                         </div>
 
