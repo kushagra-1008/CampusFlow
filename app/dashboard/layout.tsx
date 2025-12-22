@@ -108,7 +108,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <div className="hidden sm:flex items-center text-sm text-slate-500 dark:text-slate-400 ml-auto gap-4">
                             {user && (
                                 <>
-                                    <span>Welcome, <strong>{user.name}</strong> ({user.role === 'student' ? 'Student' : 'Faculty'})</span>
+                                    <span>Welcome, <strong>{user.name}</strong> ({user.role === 'Student' ? 'Student' : 'Faculty'})</span>
                                     <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
                                         {getInitials(user.name)}
                                     </div>
