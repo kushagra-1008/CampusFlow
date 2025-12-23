@@ -17,7 +17,7 @@ export interface User {
 interface AuthContextType {
     user: User | null;
     isLoading: boolean;
-    login: (email: string, password: string) => Promise<void>;
+    login: (email: string, password: string, portalRole?: UserRole) => Promise<void>;
     logout: () => void;
 }
 
@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
     }, []);
 
-    const login = async (email: string, password: string) => {
+    const login = async (email: string, password: string, portalRole?: UserRole) => {
         setIsLoading(true);
         const normalizedEmail = email.toLowerCase();
 
@@ -55,8 +55,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         // 3. Dynamic Role Assignment
+        // Priority: portalRole > email prefix > "Student"
         let role: UserRole = "Student";
-        if (normalizedEmail.startsWith("faculty@")) {
+
+        if (portalRole) {
+            role = portalRole;
+        } else if (normalizedEmail.startsWith("faculty@")) {
             role = "Teacher";
         }
 

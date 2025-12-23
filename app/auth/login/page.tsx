@@ -22,22 +22,24 @@ function LoginForm() {
         setIsLoading(true);
         setError("");
 
-        // Role Enforcement
-        const normalizedEmail = email.toLowerCase();
-        if (type === "student" && normalizedEmail.startsWith("faculty@")) {
-            setError("Access Restricted: Please use the Faculty Portal for faculty accounts.");
-            setIsLoading(false);
-            return;
-        }
+        // Role Enforcement - Strict Domain Check Only
+        // We now trust the portal entry point to determine role.
+        // Faculty Portal -> Teacher Role
+        // Student Portal -> Student Role
 
-        if (type === "faculty" && !normalizedEmail.startsWith("faculty@")) {
-            setError("Access Restricted: Please use the Student Portal for student accounts.");
+        const normalizedEmail = email.toLowerCase();
+
+        // Ensure email is valid length/format basic check
+        if (!normalizedEmail.endsWith("@lnmiit.ac.in")) {
+            setError("Only @lnmiit.ac.in emails are allowed");
             setIsLoading(false);
             return;
         }
 
         try {
-            await login(normalizedEmail, password);
+            // Map 'type' ('student' | 'faculty') to UserRole ('Student' | 'Teacher')
+            const assignedRole = type === "faculty" ? "Teacher" : "Student";
+            await login(normalizedEmail, password, assignedRole);
         } catch (err: any) {
             setError(err.message || "Login failed. Please check your credentials.");
             setIsLoading(false);
