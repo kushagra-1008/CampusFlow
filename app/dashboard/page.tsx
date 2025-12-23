@@ -287,13 +287,16 @@ export default function TheFlowDashboard() {
                                         </button>
                                     </>
                                 )}
-                                <button
-                                    onClick={() => handleDelete(req.id!)}
-                                    className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-red-500 transition-colors"
-                                    title="Delete"
-                                >
-                                    <Trash2 className="w-5 h-5" />
-                                </button>
+                                {/* Allow Delete if: Owner OR (User is Faculty AND Target is NOT Faculty) */}
+                                {(user.id === req.userId || !req.userId.toLowerCase().startsWith('faculty')) && (
+                                    <button
+                                        onClick={() => handleDelete(req.id!)}
+                                        className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-red-500 transition-colors"
+                                        title="Delete"
+                                    >
+                                        <Trash2 className="w-5 h-5" />
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ))}
