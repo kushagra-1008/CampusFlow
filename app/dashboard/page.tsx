@@ -97,10 +97,22 @@ export default function TheFlowDashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                        <div className="text-sm font-medium text-slate-500 mb-2">My Requests</div>
-                        <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                            {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : bookings.length}
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div className="text-sm font-medium text-slate-500 mb-2">My Requests</div>
+                            <div className="text-3xl font-bold text-slate-900 dark:text-white">
+                                {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : bookings.length}
+                            </div>
+                        </div>
+                        <div className="mt-4 flex items-center gap-4 text-xs font-medium">
+                            <div className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center gap-1.5">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                {bookings.filter(b => b.status === "Approved").length} Approved
+                            </div>
+                            <div className="px-2.5 py-1 rounded-full bg-red-50 text-red-700 border border-red-100 flex items-center gap-1.5">
+                                <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                                {bookings.filter(b => b.status === "Rejected").length} Rejected
+                            </div>
                         </div>
                     </motion.div>
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="col-span-1 md:col-span-2 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800 shadow-sm overflow-hidden flex flex-col h-[320px]">
