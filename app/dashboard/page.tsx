@@ -206,100 +206,106 @@ export default function TheFlowDashboard() {
             </div>
 
             {/* The Flow - Tasks List */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col h-[600px]">
+                <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-shrink-0">
                     <div>
                         <h2 className="text-xl font-bold text-slate-900 dark:text-white">Approvals</h2>
                         <p className="text-slate-500 dark:text-slate-400 text-sm">Review student requests</p>
                     </div>
-                    <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900 p-1 rounded-lg">
-                        {["All", "Pending"].map((tab) => (
-                            <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab)}
-                                className={cn(
-                                    "px-4 py-1.5 text-sm font-medium rounded-md transition-all",
-                                    activeTab === tab
-                                        ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm"
-                                        : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                                )}
-                            >
-                                {tab}
-                            </button>
-                        ))}
+                    <div className="flex items-center gap-3">
+                        <select
+                            value={activeTab}
+                            onChange={(e) => setActiveTab(e.target.value)}
+                            className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20"
+                        >
+                            <option value="All">All Status</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                        {/* Sort Toggle (Simple implementation: toggle between Newest/Oldest) */}
+                        <button
+                            onClick={() => setBookings(prev => [...prev].reverse())}
+                            className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500"
+                            title="Toggle Sort Order"
+                        >
+                            <ArrowUpRight className="w-4 h-4" />
+                        </button>
                     </div>
                 </div>
 
-                <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                <div className="overflow-y-auto flex-1 divide-y divide-slate-100 dark:divide-slate-700/50">
                     {bookings.filter(r => activeTab === "All" || r.status === activeTab).length === 0 && (
                         <div className="p-8 text-center text-slate-500">No requests found.</div>
                     )}
-                    {bookings.filter(r => activeTab === "All" || r.status === activeTab).map((req) => (
-                        <div key={req.id} className="p-6 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center justify-between">
-                            <div className="flex items-start gap-4">
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center border-2 border-amber-200 bg-amber-50 text-amber-600">
-                                    <Clock className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                                        {req.purpose || "Booking Request"}
-                                        {user.id === req.userId && (
-                                            <button
-                                                onClick={() => handleEdit(req.id!, req.purpose)}
-                                                className="text-slate-400 hover:text-primary transition-colors"
-                                            >
-                                                <Edit2 className="w-3.5 h-3.5" />
-                                            </button>
-                                        )}
-                                        <span className={cn(
-                                            "px-2 py-0.5 rounded-full text-[10px] border",
-                                            req.status === "Approved" ? "bg-emerald-100 border-emerald-200 text-emerald-700" :
-                                                req.status === "Rejected" ? "bg-red-100 border-red-200 text-red-700" :
-                                                    "bg-amber-100 border-amber-200 text-amber-700"
-                                        )}>{req.status}</span>
-                                    </h3>
-                                    <div className="flex items-center gap-3 text-sm text-slate-500 mt-1">
-                                        <span>{req.userName || "Unknown"}</span>
-                                        <span className="w-1 h-1 rounded-full bg-slate-300" />
-                                        <span>{req.hallId} ({req.time})</span>
-                                        <span className="w-1 h-1 rounded-full bg-slate-300" />
-                                        <span>{format(new Date(req.date), "MMM d")}</span>
+                    {bookings
+                        .filter(r => activeTab === "All" || r.status === activeTab)
+                        .map((req) => (
+                            <div key={req.id} className="p-6 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center justify-between">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-10 h-10 rounded-full flex items-center justify-center border-2 border-amber-200 bg-amber-50 text-amber-600">
+                                        <Clock className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                            {req.purpose || "Booking Request"}
+                                            {user.id === req.userId && (
+                                                <button
+                                                    onClick={() => handleEdit(req.id!, req.purpose)}
+                                                    className="text-slate-400 hover:text-primary transition-colors"
+                                                >
+                                                    <Edit2 className="w-3.5 h-3.5" />
+                                                </button>
+                                            )}
+                                            <span className={cn(
+                                                "px-2 py-0.5 rounded-full text-[10px] border",
+                                                req.status === "Approved" ? "bg-emerald-100 border-emerald-200 text-emerald-700" :
+                                                    req.status === "Rejected" ? "bg-red-100 border-red-200 text-red-700" :
+                                                        "bg-amber-100 border-amber-200 text-amber-700"
+                                            )}>{req.status}</span>
+                                        </h3>
+                                        <div className="flex items-center gap-3 text-sm text-slate-500 mt-1">
+                                            <span>{req.userName || "Unknown"}</span>
+                                            <span className="w-1 h-1 rounded-full bg-slate-300" />
+                                            <span>{req.hallId} ({req.time})</span>
+                                            <span className="w-1 h-1 rounded-full bg-slate-300" />
+                                            <span>{format(new Date(req.date), "MMM d")}</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="flex items-center gap-2">
-                                {req.status === 'Pending' && (
-                                    <>
+                                <div className="flex items-center gap-2">
+                                    {req.status === 'Pending' && (
+                                        <>
+                                            <button
+                                                onClick={() => bookingService.updateBookingStatus(req.id!, 'Approved')}
+                                                className="p-2 rounded-full hover:bg-emerald-50 text-emerald-600 transition-colors"
+                                                title="Approve"
+                                            >
+                                                <Check className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => bookingService.updateBookingStatus(req.id!, 'Rejected')}
+                                                className="p-2 rounded-full hover:bg-red-50 text-red-600 transition-colors"
+                                                title="Reject"
+                                            >
+                                                <X className="w-5 h-5" />
+                                            </button>
+                                        </>
+                                    )}
+                                    {/* Allow Delete if: Owner OR (User is Faculty AND Target is NOT Faculty) */}
+                                    {(user.id === req.userId || !req.userId.toLowerCase().startsWith('faculty')) && (
                                         <button
-                                            onClick={() => bookingService.updateBookingStatus(req.id!, 'Approved')}
-                                            className="p-2 rounded-full hover:bg-emerald-50 text-emerald-600 transition-colors"
-                                            title="Approve"
+                                            onClick={() => handleDelete(req.id!)}
+                                            className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-red-500 transition-colors"
+                                            title="Delete"
                                         >
-                                            <Check className="w-5 h-5" />
+                                            <Trash2 className="w-5 h-5" />
                                         </button>
-                                        <button
-                                            onClick={() => bookingService.updateBookingStatus(req.id!, 'Rejected')}
-                                            className="p-2 rounded-full hover:bg-red-50 text-red-600 transition-colors"
-                                            title="Reject"
-                                        >
-                                            <X className="w-5 h-5" />
-                                        </button>
-                                    </>
-                                )}
-                                {/* Allow Delete if: Owner OR (User is Faculty AND Target is NOT Faculty) */}
-                                {(user.id === req.userId || !req.userId.toLowerCase().startsWith('faculty')) && (
-                                    <button
-                                        onClick={() => handleDelete(req.id!)}
-                                        className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-red-500 transition-colors"
-                                        title="Delete"
-                                    >
-                                        <Trash2 className="w-5 h-5" />
-                                    </button>
-                                )}
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
                 </div>
             </div>
         </div>
