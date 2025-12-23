@@ -60,8 +60,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (portalRole) {
             role = portalRole;
-        } else if (normalizedEmail.startsWith("faculty@")) {
+        } else if (normalizedEmail.startsWith("faculty")) {
+            // Fallback inference if portalRole not passed (though page.tsx passes it)
             role = "Teacher";
+        }
+
+        // 3b. Verify Faculty Email Allowlist
+        if (role === "Teacher") {
+            const allowedFaculty = [
+                "faculty1@lnmiit.ac.in", "faculty2@lnmiit.ac.in", "faculty3@lnmiit.ac.in",
+                "faculty4@lnmiit.ac.in", "faculty5@lnmiit.ac.in", "faculty6@lnmiit.ac.in",
+                "faculty7@lnmiit.ac.in", "faculty8@lnmiit.ac.in"
+            ];
+
+            if (!allowedFaculty.includes(normalizedEmail)) {
+                setIsLoading(false);
+                throw new Error("Access Denied: This email is not authorized for Faculty Portal.");
+            }
         }
 
         // 4. Create User Object

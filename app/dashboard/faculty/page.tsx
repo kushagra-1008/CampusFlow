@@ -133,11 +133,11 @@ export default function FacultyMatrix() {
                                 </div>
                             </div>
 
-                            <div className="mt-4 grid grid-cols-2 gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button className="w-full py-1.5 rounded-lg border border-primary text-primary hover:bg-primary hover:text-white text-xs font-medium transition-colors">
-                                    Request Meeting
-                                </button>
-                                <button className="w-full py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-medium transition-colors">
+                            <div className="mt-4 grid grid-cols-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                    onClick={() => alert(`Schedule for ${faculty.name}:\n${faculty.schedule?.join("\n") || "No schedule available"}`)}
+                                    className="w-full py-1.5 rounded-lg border border-primary text-primary hover:bg-primary hover:text-white text-xs font-medium transition-colors"
+                                >
                                     View Schedule
                                 </button>
                             </div>
