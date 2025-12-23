@@ -64,22 +64,24 @@ export default function TheFlowDashboard() {
     // --- STUDENT VIEW ---
     // Fetch all approved events for "Campus Events" feed
     const [allEvents, setAllEvents] = useState<Booking[]>([]);
+    const [selectedEventDate, setSelectedEventDate] = useState(new Date());
 
     useEffect(() => {
         if (user.role === "Student") {
             const unsubscribe = bookingService.subscribeToAllBookings((data) => {
-                // Filter: Approved + Future/Today
-                const approvedFuture = data.filter(b =>
-                    b.status === "Approved" &&
-                    new Date(b.date) >= new Date(new Date().setHours(0, 0, 0, 0))
-                );
-                // Sort Ascending (Soonest first)
-                approvedFuture.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-                setAllEvents(approvedFuture);
+                // Filter: Approved + Match Selected Date (ignoring time)
+                // Note: We filter locally by date now instead of generic "future"
+                const approved = data.filter(b => b.status === "Approved");
+                setAllEvents(approved);
             });
             return () => unsubscribe();
         }
     }, [user.role]);
+
+    // Filter events based on selected date
+    const filteredEvents = allEvents.filter(event =>
+        new Date(event.date).toDateString() === selectedEventDate.toDateString()
+    ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     if (user.role === "Student") {
         return (
@@ -101,40 +103,64 @@ export default function TheFlowDashboard() {
                             {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : bookings.length}
                         </div>
                     </motion.div>
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="col-span-1 md:col-span-2 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800 shadow-sm overflow-y-auto max-h-[300px]">
-                        <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2 sticky top-0 bg-blue-50 dark:bg-slate-900/0 backdrop-blur-sm z-10 py-1">Upcoming Campus Events ({allEvents.length})</div>
-                        {allEvents.length > 0 ? (
-                            <div className="space-y-4">
-                                {(() => {
-                                    // Group by Date
-                                    const grouped = allEvents.reduce((acc, event) => {
-                                        const dateKey = format(new Date(event.date), "EEE, MMM d");
-                                        if (!acc[dateKey]) acc[dateKey] = [];
-                                        acc[dateKey].push(event);
-                                        return acc;
-                                    }, {} as Record<string, Booking[]>);
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="col-span-1 md:col-span-2 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800 shadow-sm overflow-hidden flex flex-col h-[320px]">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="text-sm font-medium text-blue-600 dark:text-blue-400">Campus Events</div>
+                            {/* Date Picker Control */}
+                            <div className="flex items-center gap-1 bg-white dark:bg-slate-900 p-0.5 rounded-lg border border-blue-100 dark:border-slate-700 shadow-sm">
+                                <button
+                                    onClick={() => setSelectedEventDate(d => {
+                                        const date = new Date(d);
+                                        date.setDate(date.getDate() - 1);
+                                        return date;
+                                    })}
+                                    className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-slate-500"
+                                >
+                                    <ArrowUpRight className="w-4 h-4 rotate-[-135deg]" /> {/* Hack for Left Arrow if Chevron not imported, but wait, Chevron IS imported? Checking Page imports... */}
+                                </button>
+                                <div className="px-3 text-xs font-semibold text-slate-700 dark:text-slate-300 min-w-[100px] text-center">
+                                    {format(selectedEventDate, "EEE, MMM d")}
+                                </div>
+                                <button
+                                    onClick={() => setSelectedEventDate(d => {
+                                        const date = new Date(d);
+                                        date.setDate(date.getDate() + 1);
+                                        return date;
+                                    })}
+                                    className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-slate-500"
+                                >
+                                    <ArrowUpRight className="w-4 h-4 rotate-45" />
+                                </button>
+                            </div>
+                        </div>
 
-                                    return Object.entries(grouped).map(([date, events]) => (
-                                        <div key={date}>
-                                            <div className="text-xs font-bold text-blue-400 dark:text-blue-500 uppercase tracking-wider mb-2 mt-1">{date}</div>
-                                            <div className="space-y-2">
-                                                {events.map(event => (
-                                                    <div key={event.id} className="flex items-center justify-between text-sm bg-white/50 dark:bg-black/10 p-2 rounded-lg border border-blue-100 dark:border-blue-800/50">
-                                                        <span className="font-semibold text-blue-900 dark:text-blue-100 truncate max-w-[200px]">{event.purpose}</span>
-                                                        <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300 text-xs font-mono">
-                                                            <span>{event.hallId}</span>
-                                                            <span>•</span>
-                                                            <span>{event.time}</span>
-                                                        </div>
-                                                    </div>
-                                                ))}
+                        {filteredEvents.length > 0 ? (
+                            <div className="overflow-y-auto space-y-2 pr-2">
+                                {filteredEvents.map(event => (
+                                    <div key={event.id} className="flex items-center justify-between text-sm bg-white/60 dark:bg-black/20 p-3 rounded-xl border border-blue-100 dark:border-blue-800/30 hover:bg-white dark:hover:bg-black/30 transition-colors">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-8 w-1 bg-blue-400 rounded-full" />
+                                            <div>
+                                                <div className="font-semibold text-blue-900 dark:text-blue-100 truncate max-w-[200px]">{event.purpose}</div>
+                                                <div className="text-xs text-blue-600 dark:text-blue-400">{event.userName || "Faculty"}</div>
                                             </div>
                                         </div>
-                                    ));
-                                })()}
+
+                                        <div className="text-right">
+                                            <div className="text-xs font-bold text-slate-700 dark:text-slate-300">{event.time}</div>
+                                            <div className="text-[10px] text-slate-500 uppercase tracking-wide font-medium bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded mt-0.5">{event.hallId}</div>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         ) : (
-                            <div className="text-blue-900 dark:text-blue-100 font-medium">No schedule classes/events found.</div>
+                            <div className="flex-1 flex flex-col items-center justify-center text-center">
+                                <div className="w-12 h-12 rounded-full bg-blue-100/50 dark:bg-blue-900/20 flex items-center justify-center text-blue-400 mb-2">
+                                    <CalendarDays className="w-6 h-6" />
+                                </div>
+                                <div className="text-sm font-medium text-blue-900 dark:text-blue-100">No events scheduled</div>
+                                <p className="text-xs text-blue-600 dark:text-blue-400">Nothing happening on this day.</p>
+                            </div>
                         )}
                     </motion.div>
                 </div>
