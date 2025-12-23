@@ -219,12 +219,14 @@ export default function TheFlowDashboard() {
                                 <div>
                                     <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                                         {req.purpose || "Booking Request"}
-                                        <button
-                                            onClick={() => handleEdit(req.id!, req.purpose)}
-                                            className="text-slate-400 hover:text-primary transition-colors"
-                                        >
-                                            <Edit2 className="w-3.5 h-3.5" />
-                                        </button>
+                                        {user.id === req.userId && (
+                                            <button
+                                                onClick={() => handleEdit(req.id!, req.purpose)}
+                                                className="text-slate-400 hover:text-primary transition-colors"
+                                            >
+                                                <Edit2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        )}
                                         <span className={cn(
                                             "px-2 py-0.5 rounded-full text-[10px] border",
                                             req.status === "Approved" ? "bg-emerald-100 border-emerald-200 text-emerald-700" :
