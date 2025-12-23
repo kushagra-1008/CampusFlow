@@ -61,8 +61,11 @@ This project is optimized for deployment on **Vercel**.
 
 1.  Push code to GitHub.
 2.  Import project into Vercel.
-3.  Framework Preset: **Next.js**.
-4.  Deploy.
+3.  **Environment Variables**:
+    - Go to "Environment Variables" in the Vercel deployment screen.
+    - Copy all keys from your local `.env.local` and add them there (e.g. `NEXT_PUBLIC_FIREBASE_API_KEY`, etc.).
+4.  Framework Preset: **Next.js**.
+5.  Deploy.
 
 ## Future Roadmap
 

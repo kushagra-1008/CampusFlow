@@ -103,7 +103,6 @@ export default function Home() {
             {[
               { icon: Calendar, title: "Smart Booking", desc: "Conflict-free hall reservation system" },
               { icon: Users, title: "Faculty Matrix", desc: "Real-time availability tracking" },
-              { icon: MessageSquare, title: "Academic Chat", desc: "Direct student-teacher messaging" }
             ].map((feature, i) => (
               <motion.div
                 key={i}
