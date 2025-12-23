@@ -40,19 +40,18 @@ export default function BookingPage() {
         return () => { mounted = false; };
     }, []);
 
-    // 2. Fetch Bookings when Date Changes
+    // 2. Real-time Booking Listener
     useEffect(() => {
-        const fetchBookings = async () => {
-            try {
-                const bookings = await bookingService.getBookingsForDate(selectedDate);
-                const bookedSet = new Set(bookings.map(b => `${b.hallId}-${b.time}`));
-                setBookedSlots(bookedSet);
-            } catch (err) {
-                console.error("Failed to load bookings", err);
-            }
-        };
+        setIsLoading(true);
+        // Subscribe to real-time updates
+        const unsubscribe = bookingService.subscribeToBookings(selectedDate, (bookings) => {
+            const bookedSet = new Set(bookings.map(b => `${b.hallId}-${b.time}`));
+            setBookedSlots(bookedSet);
+            setIsLoading(false);
+        });
 
-        fetchBookings();
+        // Cleanup listener on unmount or date change
+        return () => unsubscribe();
     }, [selectedDate]);
 
     const filteredHalls = halls.filter(hall =>
@@ -77,11 +76,7 @@ export default function BookingPage() {
         alert(result.message);
         setSelectedSlot(null);
         setIsBooking(false);
-        // Refresh bookings
-        if (result.success) {
-            const bookings = await bookingService.getBookingsForDate(selectedDate);
-            setBookedSlots(new Set(bookings.map(b => `${b.hallId}-${b.time}`)));
-        }
+        // No need to manually refetch, the onSnapshot listener will update automatically
     };
 
     if (isLoading) {

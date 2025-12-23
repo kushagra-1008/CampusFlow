@@ -1,5 +1,5 @@
 import { db } from "@/lib/firebase";
-import { collection, getDocs, doc, setDoc, query, where, addDoc, writeBatch } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, query, where, addDoc, writeBatch, onSnapshot } from "firebase/firestore";
 
 export interface Hall {
     id: string; // "LT-1"
@@ -43,8 +43,24 @@ export const bookingService = {
         "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"
     ],
 
-    // 2. Fetch Bookings for a Date (Bulk Check)
+    // 2. Fetch Bookings for a Date (Real-time Listener)
+    subscribeToBookings: (date: Date, callback: (bookings: Booking[]) => void) => {
+        const dateStr = date.toISOString().split('T')[0];
+        const q = query(
+            collection(db, BOOKINGS_COLLECTION),
+            where("dateStr", "==", dateStr)
+        );
+
+        // onSnapshot returns an unsubscribe function
+        return onSnapshot(q, (snapshot) => {
+            const bookings = snapshot.docs.map(d => d.data() as Booking);
+            callback(bookings);
+        });
+    },
+
+    // 2b. Fetch Bookings (One-time - Kept for reference or other uses)
     getBookingsForDate: async (date: Date): Promise<Booking[]> => {
+
         const dateStr = date.toISOString().split('T')[0];
         const q = query(
             collection(db, BOOKINGS_COLLECTION),
