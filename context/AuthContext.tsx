@@ -65,9 +65,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         // 4. Create User Object
+        // Anonymization: Use "Student X" or "Faculty Y" based on random ID or hash
+        // For simplicity in this mock data generation, we'll use a random suffix
+        const randomSuffix = Math.floor(Math.random() * 1000);
+        const namePrefix = role === "Teacher" ? "Faculty" : "Student";
+
         const mockUser: User = {
             id: Math.random().toString(36).substr(2, 9),
-            name: normalizedEmail.split("@")[0].replace(".", " ").replace(/\b\w/g, l => l.toUpperCase()),
+            name: `${namePrefix} ${randomSuffix}`,
             email: normalizedEmail,
             role,
             details: role === "Student" ? "Roll No: Pending" : "Dept: Pending" // Placeholder

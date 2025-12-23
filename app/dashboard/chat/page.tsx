@@ -7,10 +7,11 @@ import { cn } from "@/lib/utils";
 import { useSocket, Message } from "@/context/SocketContext";
 
 // Mock Contacts (Static for now, could be service driven)
+// Mock Contacts (Static for now, could be service driven)
 const CONTACTS = [
-    { id: 1, name: "Dr. Anupam Singh", role: "Faculty", lastMsg: "Please submit the report by Friday.", time: "10:30 AM", unread: 2, status: "online" },
-    { id: 2, name: "Ravi Kumar", role: "Student", lastMsg: "Sir, is the LT-4 available?", time: "Yesterday", unread: 0, status: "offline" },
-    { id: 3, name: "Dr. Preety Singh", role: "Faculty", lastMsg: "Confirmed. See you then.", time: "Mon", unread: 0, status: "online" },
+    { id: 1, name: "Faculty 1", role: "Faculty", lastMsg: "Please submit the report by Friday.", time: "10:30 AM", unread: 2, status: "online" },
+    { id: 2, name: "Student 1", role: "Student", lastMsg: "Sir, is the LT-4 available?", time: "Yesterday", unread: 0, status: "offline" },
+    { id: 3, name: "Faculty 2", role: "Faculty", lastMsg: "Confirmed. See you then.", time: "Mon", unread: 0, status: "online" },
     { id: 4, name: "Coding Club", role: "Group", lastMsg: "Event starts at 6 PM!", time: "Sun", unread: 5, status: "online" },
 ];
 
