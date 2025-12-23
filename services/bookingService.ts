@@ -22,6 +22,17 @@ export interface Booking {
 const HALLS_COLLECTION = "halls";
 const BOOKINGS_COLLECTION = "bookings";
 
+// Helper to safely convert Firestore data to Booking type
+const mapDocToBooking = (doc: any): Booking => {
+    const data = doc.data();
+    return {
+        id: doc.id,
+        ...data,
+        // Convert Firestore Timestamp to JS Date
+        date: data.date?.toDate ? data.date.toDate() : new Date(data.date),
+    } as Booking;
+};
+
 export const bookingService = {
     // 1. Fetch Halls (with Auto-Seeding check)
     getHalls: async (): Promise<Hall[]> => {
@@ -57,7 +68,7 @@ export const bookingService = {
 
         // onSnapshot returns an unsubscribe function
         return onSnapshot(q, (snapshot) => {
-            const bookings = snapshot.docs.map(d => d.data() as Booking);
+            const bookings = snapshot.docs.map(mapDocToBooking);
             callback(bookings);
         });
     },
@@ -71,7 +82,7 @@ export const bookingService = {
             where("dateStr", "==", dateStr)
         );
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(d => d.data() as Booking);
+        return snapshot.docs.map(mapDocToBooking);
     },
 
     // 3. Check Availability (Single - Helper)
@@ -129,7 +140,7 @@ export const bookingService = {
             where("userId", "==", userId)
         );
         return onSnapshot(q, (snapshot) => {
-            const bookings = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Booking));
+            const bookings = snapshot.docs.map(mapDocToBooking);
             // Sort by Date (newest first or future first could be complex without index, doing in JS)
             bookings.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
             callback(bookings);
@@ -140,7 +151,7 @@ export const bookingService = {
     subscribeToAllBookings: (callback: (bookings: Booking[]) => void) => {
         const q = collection(db, BOOKINGS_COLLECTION);
         return onSnapshot(q, (snapshot) => {
-            const bookings = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Booking));
+            const bookings = snapshot.docs.map(mapDocToBooking);
             bookings.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Newest created/date
             callback(bookings);
         });
