@@ -1,5 +1,5 @@
 import { db } from "@/lib/firebase";
-import { collection, getDocs, doc, setDoc, query, where, addDoc, writeBatch, onSnapshot } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, query, where, addDoc, writeBatch, onSnapshot, deleteDoc } from "firebase/firestore";
 
 export interface Hall {
     id: string; // "LT-1"
@@ -164,6 +164,28 @@ export const bookingService = {
             return true;
         } catch (e) {
             console.error("Error updating status", e);
+            return false;
+        }
+    },
+
+    // 7. Delete Booking
+    deleteBooking: async (bookingId: string) => {
+        try {
+            await deleteDoc(doc(db, BOOKINGS_COLLECTION, bookingId));
+            return true;
+        } catch (e) {
+            console.error("Error deleting booking", e);
+            return false;
+        }
+    },
+
+    // 8. Update Booking Details (e.g. Purpose)
+    updateBooking: async (bookingId: string, data: Partial<Booking>) => {
+        try {
+            await setDoc(doc(db, BOOKINGS_COLLECTION, bookingId), data, { merge: true });
+            return true;
+        } catch (e) {
+            console.error("Error updating booking", e);
             return false;
         }
     }

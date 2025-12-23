@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, X, Clock, CalendarDays, MoreVertical, Search, ArrowUpRight, Plus, Loader2 } from "lucide-react";
+import { Check, X, Clock, CalendarDays, MoreVertical, Search, ArrowUpRight, Plus, Loader2, Trash2, Edit2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -37,6 +37,19 @@ export default function TheFlowDashboard() {
             if (unsubscribe) unsubscribe();
         };
     }, [user]);
+
+    const handleDelete = async (id: string) => {
+        if (confirm("Are you sure you want to cancel this booking?")) {
+            await bookingService.deleteBooking(id);
+        }
+    };
+
+    const handleEdit = async (id: string, currentPurpose: string) => {
+        const newPurpose = prompt("Update Event Title:", currentPurpose);
+        if (newPurpose && newPurpose !== currentPurpose) {
+            await bookingService.updateBooking(id, { purpose: newPurpose });
+        }
+    };
 
     if (!user) return null;
 
@@ -95,17 +108,34 @@ export default function TheFlowDashboard() {
                         {bookings.map(booking => (
                             <div key={booking.id} className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                 <div>
-                                    <div className="font-semibold text-slate-900 dark:text-white">{booking.purpose}</div>
+                                    <div className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                        {booking.purpose}
+                                        <button
+                                            onClick={() => handleEdit(booking.id!, booking.purpose)}
+                                            className="text-slate-400 hover:text-primary transition-colors"
+                                        >
+                                            <Edit2 className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
                                     <div className="text-sm text-slate-500">{booking.hallId} • {format(new Date(booking.date), "PPP")} • {booking.time}</div>
                                 </div>
-                                <span className={cn(
-                                    "px-3 py-1 rounded-full text-xs font-medium border",
-                                    booking.status === "Approved" ? "bg-emerald-50 text-emerald-600 border-emerald-200" :
-                                        booking.status === "Rejected" ? "bg-red-50 text-red-600 border-red-200" :
-                                            "bg-amber-50 text-amber-600 border-amber-200"
-                                )}>
-                                    {booking.status}
-                                </span>
+                                <div className="flex items-center gap-3">
+                                    <span className={cn(
+                                        "px-3 py-1 rounded-full text-xs font-medium border",
+                                        booking.status === "Approved" ? "bg-emerald-50 text-emerald-600 border-emerald-200" :
+                                            booking.status === "Rejected" ? "bg-red-50 text-red-600 border-red-200" :
+                                                "bg-amber-50 text-amber-600 border-amber-200"
+                                    )}>
+                                        {booking.status}
+                                    </span>
+                                    <button
+                                        onClick={() => handleDelete(booking.id!)}
+                                        className="text-slate-400 hover:text-red-500 transition-colors p-1"
+                                        title="Cancel Booking"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -189,6 +219,12 @@ export default function TheFlowDashboard() {
                                 <div>
                                     <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                                         {req.purpose || "Booking Request"}
+                                        <button
+                                            onClick={() => handleEdit(req.id!, req.purpose)}
+                                            className="text-slate-400 hover:text-primary transition-colors"
+                                        >
+                                            <Edit2 className="w-3.5 h-3.5" />
+                                        </button>
                                         <span className={cn(
                                             "px-2 py-0.5 rounded-full text-[10px] border",
                                             req.status === "Approved" ? "bg-emerald-100 border-emerald-200 text-emerald-700" :
@@ -206,24 +242,33 @@ export default function TheFlowDashboard() {
                                 </div>
                             </div>
 
-                            {req.status === 'Pending' && (
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => bookingService.updateBookingStatus(req.id!, 'Approved')}
-                                        className="p-2 rounded-full hover:bg-emerald-50 text-emerald-600 transition-colors"
-                                        title="Approve"
-                                    >
-                                        <Check className="w-5 h-5" />
-                                    </button>
-                                    <button
-                                        onClick={() => bookingService.updateBookingStatus(req.id!, 'Rejected')}
-                                        className="p-2 rounded-full hover:bg-red-50 text-red-600 transition-colors"
-                                        title="Reject"
-                                    >
-                                        <X className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            )}
+                            <div className="flex items-center gap-2">
+                                {req.status === 'Pending' && (
+                                    <>
+                                        <button
+                                            onClick={() => bookingService.updateBookingStatus(req.id!, 'Approved')}
+                                            className="p-2 rounded-full hover:bg-emerald-50 text-emerald-600 transition-colors"
+                                            title="Approve"
+                                        >
+                                            <Check className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            onClick={() => bookingService.updateBookingStatus(req.id!, 'Rejected')}
+                                            className="p-2 rounded-full hover:bg-red-50 text-red-600 transition-colors"
+                                            title="Reject"
+                                        >
+                                            <X className="w-5 h-5" />
+                                        </button>
+                                    </>
+                                )}
+                                <button
+                                    onClick={() => handleDelete(req.id!)}
+                                    className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-red-500 transition-colors"
+                                    title="Delete"
+                                >
+                                    <Trash2 className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </div>
