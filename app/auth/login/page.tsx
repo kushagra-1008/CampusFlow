@@ -23,20 +23,21 @@ function LoginForm() {
         setError("");
 
         // Role Enforcement
-        if (type === "student" && email.startsWith("faculty@")) {
+        const normalizedEmail = email.toLowerCase();
+        if (type === "student" && normalizedEmail.startsWith("faculty@")) {
             setError("Access Restricted: Please use the Faculty Portal for faculty accounts.");
             setIsLoading(false);
             return;
         }
 
-        if (type === "faculty" && !email.startsWith("faculty@")) {
+        if (type === "faculty" && !normalizedEmail.startsWith("faculty@")) {
             setError("Access Restricted: Please use the Student Portal for student accounts.");
             setIsLoading(false);
             return;
         }
 
         try {
-            await login(email, password);
+            await login(normalizedEmail, password);
         } catch (err: any) {
             setError(err.message || "Login failed. Please check your credentials.");
             setIsLoading(false);

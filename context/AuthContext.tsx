@@ -38,6 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = async (email: string, password: string) => {
         setIsLoading(true);
+        const normalizedEmail = email.toLowerCase();
 
         // 1. Validate Password
         if (password !== "CampusFlow") {
@@ -46,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         // 2. Validate Domain
-        if (!email.endsWith("@lnmiit.ac.in")) {
+        if (!normalizedEmail.endsWith("@lnmiit.ac.in")) {
             setIsLoading(false);
             throw new Error("Only @lnmiit.ac.in emails are allowed");
         }
@@ -55,15 +56,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // 3. Dynamic Role Assignment
         let role: UserRole = "Student";
-        if (email.startsWith("faculty@")) {
+        if (normalizedEmail.startsWith("faculty@")) {
             role = "Teacher";
         }
 
         // 4. Create User Object
         const mockUser: User = {
             id: Math.random().toString(36).substr(2, 9),
-            name: email.split("@")[0].replace(".", " ").replace(/\b\w/g, l => l.toUpperCase()),
-            email,
+            name: normalizedEmail.split("@")[0].replace(".", " ").replace(/\b\w/g, l => l.toUpperCase()),
+            email: normalizedEmail,
             role,
             details: role === "Student" ? "Roll No: Pending" : "Dept: Pending" // Placeholder
         };
