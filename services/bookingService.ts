@@ -191,6 +191,26 @@ export const bookingService = {
     }
 };
 
+// Helper to get next occurrence of a day (Mon=1, ... Sun=0/7)
+const getNextDate = (dayName: string, timeStr: string): Date => {
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const targetDayIndex = days.indexOf(dayName);
+    const today = new Date();
+    const currentDayIndex = today.getDay();
+
+    let daysUntil = targetDayIndex - currentDayIndex;
+    if (daysUntil < 0) daysUntil += 7; // Next week
+    // If today is the day but time passed? For simplicity, treat today as valid if created now.
+
+    const nextDate = new Date();
+    nextDate.setDate(today.getDate() + daysUntil);
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    nextDate.setHours(hours, minutes, 0, 0);
+    return nextDate;
+}
+
+import { INITIAL_FACULTY } from "./facultyService";
+
 // Seeding Logic (Optimized with Batch)
 const seedHalls = async () => {
     const batch = writeBatch(db);
@@ -217,4 +237,53 @@ const seedHalls = async () => {
     });
 
     await batch.commit();
+    console.log("Halls seeded.");
+
+    // Seed Classes
+    await seedClasses();
 };
+
+const seedClasses = async () => {
+    console.log("Seeding initial faculty classes...");
+    const batch = writeBatch(db);
+
+    for (const faculty of INITIAL_FACULTY) {
+        if (!faculty.schedule) continue;
+
+        for (const slot of faculty.schedule) {
+            // Format: "Mon 10:00 - LT-1"
+            const parts = slot.split(" - ");
+            if (parts.length < 2) continue;
+
+            const location = parts[1].trim();
+            // Only book valid halls
+            if (!location.startsWith("LT-")) continue;
+
+            const timeParts = parts[0].split(" "); // ["Mon", "10:00"]
+            const dayName = timeParts[0];
+            const time = timeParts[1];
+
+            const date = getNextDate(dayName, time);
+            const dateStr = date.toISOString().split('T')[0];
+
+            // Construct a deterministic ID so we don't duplicate on re-runs usually
+            // but for simple logic we'll just let Firestore geneate or simple hash
+            const docRef = doc(collection(db, BOOKINGS_COLLECTION));
+
+            batch.set(docRef, {
+                hallId: location,
+                time: time,
+                date: date, // Firestore timestamp conversion handled by SDK? No, we need object or native date. SDK handles JS Date.
+                dateStr: dateStr,
+                userId: faculty.email,
+                purpose: `Class: ${faculty.dept} Lecture`,
+                status: 'Approved', // Auto-approved class
+                userName: faculty.name,
+                createdAt: new Date().toISOString()
+            });
+        }
+    }
+
+    await batch.commit();
+    console.log("Classes seeded as bookings.");
+}
