@@ -92,9 +92,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const displayName = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
 
         const mockUser: User = {
-            id: normalizedEmail, // Use email as consistent ID
+            id: normalizedEmail,
             name: displayName,
-            email: normalizedEmail,
             email: normalizedEmail,
             role,
             details: role === "Student" ? "Roll No: Pending" : "Dept: Pending" // Placeholder
