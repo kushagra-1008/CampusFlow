@@ -5,6 +5,8 @@ import { Search, Mail, Building2, Clock, MoreHorizontal, CheckCircle2, XCircle, 
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { facultyService, Faculty } from "@/services/facultyService";
+import { bookingService } from "@/services/bookingService";
+import { format } from "date-fns";
 
 const STATUS_CONFIG: Record<string, { color: string, icon: any }> = {
     "Available": { color: "text-emerald-600 bg-emerald-50 border-emerald-200", icon: CheckCircle2 },
@@ -34,6 +36,27 @@ export default function FacultyMatrix() {
     });
 
     const uniqueDepts = ["All", ...Array.from(new Set(facultyList.map(f => f.dept)))];
+
+    const handleViewSchedule = (faculty: Faculty) => {
+        // Fetch bookings for this faculty's email
+        const unsubscribe = bookingService.subscribeToUserBookings(faculty.email, (bookings) => {
+            // Filter for upcoming bookings (today onwards)
+            const upcoming = bookings
+                .filter(b => new Date(b.date) >= new Date(new Date().setHours(0, 0, 0, 0)))
+                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                .slice(0, 5); // Show next 5 classes/events
+
+            if (upcoming.length === 0) {
+                alert(`No upcoming schedule found for ${faculty.name}`);
+            } else {
+                const scheduleStr = upcoming.map(b =>
+                    `${format(new Date(b.date), "EEE MMM d")} • ${b.time} • ${b.hallId}\n${b.purpose}`
+                ).join("\n\n");
+                alert(`📅 Schedule for ${faculty.name}:\n\n${scheduleStr}`);
+            }
+            unsubscribe(); // Run once
+        });
+    };
 
     if (isLoading) {
         return <div className="flex h-96 items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -135,7 +158,7 @@ export default function FacultyMatrix() {
 
                             <div className="mt-4 grid grid-cols-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button
-                                    onClick={() => alert(`Schedule for ${faculty.name}:\n${faculty.schedule?.join("\n") || "No schedule available"}`)}
+                                    onClick={() => handleViewSchedule(faculty)}
                                     className="w-full py-1.5 rounded-lg border border-primary text-primary hover:bg-primary hover:text-white text-xs font-medium transition-colors"
                                 >
                                     View Schedule

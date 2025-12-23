@@ -62,6 +62,23 @@ export default function TheFlowDashboard() {
     const todaysAppointments = bookings.filter(b => new Date(b.date).toDateString() === new Date().toDateString()).length;
 
     // --- STUDENT VIEW ---
+    // Fetch all approved events for "Campus Events" feed
+    const [allEvents, setAllEvents] = useState<Booking[]>([]);
+
+    useEffect(() => {
+        if (user.role === "Student") {
+            const unsubscribe = bookingService.subscribeToAllBookings((data) => {
+                // Filter: Approved + Future/Today
+                const approvedFuture = data.filter(b =>
+                    b.status === "Approved" &&
+                    new Date(b.date) >= new Date(new Date().setHours(0, 0, 0, 0))
+                );
+                setAllEvents(approvedFuture);
+            });
+            return () => unsubscribe();
+        }
+    }, [user.role]);
+
     if (user.role === "Student") {
         return (
             <div className="space-y-8">
@@ -75,31 +92,38 @@ export default function TheFlowDashboard() {
                     </Link>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
                         <div className="text-sm font-medium text-slate-500 mb-2">My Requests</div>
                         <div className="text-3xl font-bold text-slate-900 dark:text-white">
                             {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : bookings.length}
                         </div>
                     </motion.div>
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="p-6 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800 shadow-sm">
-                        <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2">Next Event</div>
-                        {nextEvent ? (
-                            <>
-                                <div className="text-xl font-bold text-blue-900 dark:text-blue-100">{nextEvent.purpose}</div>
-                                <div className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                                    {format(new Date(nextEvent.date), "PPP")} • {nextEvent.time} • {nextEvent.hallId}
-                                </div>
-                            </>
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="col-span-1 md:col-span-2 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800 shadow-sm overflow-y-auto max-h-[160px]">
+                        <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2">Upcoming Campus Events ({allEvents.length})</div>
+                        {allEvents.length > 0 ? (
+                            <div className="space-y-3">
+                                {allEvents.slice(0, 3).map(event => (
+                                    <div key={event.id} className="flex items-center justify-between text-sm">
+                                        <span className="font-semibold text-blue-900 dark:text-blue-100 truncate max-w-[200px]">{event.purpose}</span>
+                                        <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300 text-xs">
+                                            <span>{event.hallId}</span>
+                                            <span>•</span>
+                                            <span>{format(new Date(event.date), "MMM d")} {event.time}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                                {allEvents.length > 3 && <div className="text-xs text-blue-500 text-center pt-1">+{allEvents.length - 3} more</div>}
+                            </div>
                         ) : (
-                            <div className="text-blue-900 dark:text-blue-100 font-medium">No upcoming events</div>
+                            <div className="text-blue-900 dark:text-blue-100 font-medium">No schedule classes/events found.</div>
                         )}
                     </motion.div>
                 </div>
 
                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
                     <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-                        <h2 className="font-bold text-lg text-slate-900 dark:text-white">Booking History</h2>
+                        <h2 className="font-bold text-lg text-slate-900 dark:text-white">My Booking History</h2>
                     </div>
                     <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
                         {bookings.length === 0 && !isLoading && (
