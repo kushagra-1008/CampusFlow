@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             role = "Teacher";
         }
 
-        // 3b. Verify Faculty Email Allowlist
+        // 3b. Verify Faculty & Student Email Allowlist
         if (role === "Teacher") {
             const allowedFaculty = [
                 "faculty1@lnmiit.ac.in", "faculty2@lnmiit.ac.in", "faculty3@lnmiit.ac.in",
@@ -76,6 +76,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (!allowedFaculty.includes(normalizedEmail)) {
                 setIsLoading(false);
                 throw new Error("Access Denied: This email is not authorized for Faculty Portal.");
+            }
+        } else {
+            // Student Role Strict Check
+            const allowedStudents = Array.from({ length: 20 }, (_, i) => `student${i + 1}@lnmiit.ac.in`);
+            if (!allowedStudents.includes(normalizedEmail)) {
+                setIsLoading(false);
+                throw new Error("Access Denied: Only student1-20@lnmiit.ac.in are allowed.");
             }
         }
 
