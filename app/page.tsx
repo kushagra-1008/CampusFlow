@@ -53,7 +53,7 @@ export default function Home() {
 
           {/* Cards for Role Selection */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto mt-12">
-            <Link href="/auth/login">
+            <Link href="/auth/login?type=student">
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -75,7 +75,7 @@ export default function Home() {
               </motion.div>
             </Link>
 
-            <Link href="/auth/login">
+            <Link href="/auth/login?type=faculty">
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
