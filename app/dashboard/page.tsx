@@ -101,21 +101,37 @@ export default function TheFlowDashboard() {
                             {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : bookings.length}
                         </div>
                     </motion.div>
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="col-span-1 md:col-span-2 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800 shadow-sm overflow-y-auto max-h-[160px]">
-                        <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2">Upcoming Campus Events ({allEvents.length})</div>
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="col-span-1 md:col-span-2 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800 shadow-sm overflow-y-auto max-h-[300px]">
+                        <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2 sticky top-0 bg-blue-50 dark:bg-slate-900/0 backdrop-blur-sm z-10 py-1">Upcoming Campus Events ({allEvents.length})</div>
                         {allEvents.length > 0 ? (
-                            <div className="space-y-3">
-                                {allEvents.slice(0, 3).map(event => (
-                                    <div key={event.id} className="flex items-center justify-between text-sm">
-                                        <span className="font-semibold text-blue-900 dark:text-blue-100 truncate max-w-[200px]">{event.purpose}</span>
-                                        <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300 text-xs">
-                                            <span>{event.hallId}</span>
-                                            <span>•</span>
-                                            <span>{format(new Date(event.date), "MMM d")} {event.time}</span>
+                            <div className="space-y-4">
+                                {(() => {
+                                    // Group by Date
+                                    const grouped = allEvents.reduce((acc, event) => {
+                                        const dateKey = format(new Date(event.date), "EEE, MMM d");
+                                        if (!acc[dateKey]) acc[dateKey] = [];
+                                        acc[dateKey].push(event);
+                                        return acc;
+                                    }, {} as Record<string, Booking[]>);
+
+                                    return Object.entries(grouped).map(([date, events]) => (
+                                        <div key={date}>
+                                            <div className="text-xs font-bold text-blue-400 dark:text-blue-500 uppercase tracking-wider mb-2 mt-1">{date}</div>
+                                            <div className="space-y-2">
+                                                {events.map(event => (
+                                                    <div key={event.id} className="flex items-center justify-between text-sm bg-white/50 dark:bg-black/10 p-2 rounded-lg border border-blue-100 dark:border-blue-800/50">
+                                                        <span className="font-semibold text-blue-900 dark:text-blue-100 truncate max-w-[200px]">{event.purpose}</span>
+                                                        <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300 text-xs font-mono">
+                                                            <span>{event.hallId}</span>
+                                                            <span>•</span>
+                                                            <span>{event.time}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
-                                {allEvents.length > 3 && <div className="text-xs text-blue-500 text-center pt-1">+{allEvents.length - 3} more</div>}
+                                    ));
+                                })()}
                             </div>
                         ) : (
                             <div className="text-blue-900 dark:text-blue-100 font-medium">No schedule classes/events found.</div>
