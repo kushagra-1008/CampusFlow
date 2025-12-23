@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const logout = () => {
         setUser(null);
         localStorage.removeItem("campusflow_user");
-        router.push("/");
+        window.location.href = "/"; // Force hard refresh to clear all state
     };
 
     return (

@@ -73,6 +73,8 @@ export default function TheFlowDashboard() {
                     b.status === "Approved" &&
                     new Date(b.date) >= new Date(new Date().setHours(0, 0, 0, 0))
                 );
+                // Sort Ascending (Soonest first)
+                approvedFuture.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
                 setAllEvents(approvedFuture);
             });
             return () => unsubscribe();
