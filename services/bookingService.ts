@@ -43,7 +43,18 @@ export const bookingService = {
         "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"
     ],
 
-    // 2. Check Availability (Real Firestore Query)
+    // 2. Fetch Bookings for a Date (Bulk Check)
+    getBookingsForDate: async (date: Date): Promise<Booking[]> => {
+        const dateStr = date.toISOString().split('T')[0];
+        const q = query(
+            collection(db, BOOKINGS_COLLECTION),
+            where("dateStr", "==", dateStr)
+        );
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(d => d.data() as Booking);
+    },
+
+    // 3. Check Availability (Single - Helper)
     checkAvailability: async (hallId: string, time: string, date: Date): Promise<boolean> => {
         // Simplified: Check if any booking exists for this hall+time (ignoring date strictness for this prototype unless date is formatted string)
         // In real app, store date as ISO string "YYYY-MM-DD"

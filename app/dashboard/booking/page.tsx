@@ -16,7 +16,9 @@ export default function BookingPage() {
     const [isBooking, setIsBooking] = useState(false);
 
     const [error, setError] = useState<string | null>(null);
+    const [bookedSlots, setBookedSlots] = useState<Set<string>>(new Set());
 
+    // 1. Fetch Halls on Mount
     useEffect(() => {
         let mounted = true;
 
@@ -37,6 +39,21 @@ export default function BookingPage() {
 
         return () => { mounted = false; };
     }, []);
+
+    // 2. Fetch Bookings when Date Changes
+    useEffect(() => {
+        const fetchBookings = async () => {
+            try {
+                const bookings = await bookingService.getBookingsForDate(selectedDate);
+                const bookedSet = new Set(bookings.map(b => `${b.hallId}-${b.time}`));
+                setBookedSlots(bookedSet);
+            } catch (err) {
+                console.error("Failed to load bookings", err);
+            }
+        };
+
+        fetchBookings();
+    }, [selectedDate]);
 
     const filteredHalls = halls.filter(hall =>
         hall.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -60,6 +77,11 @@ export default function BookingPage() {
         alert(result.message);
         setSelectedSlot(null);
         setIsBooking(false);
+        // Refresh bookings
+        if (result.success) {
+            const bookings = await bookingService.getBookingsForDate(selectedDate);
+            setBookedSlots(new Set(bookings.map(b => `${b.hallId}-${b.time}`)));
+        }
     };
 
     if (isLoading) {
@@ -148,22 +170,20 @@ export default function BookingPage() {
                         <div className="p-4 grid grid-cols-3 gap-2">
                             {timeSlots.map((time) => {
                                 const isSelected = selectedSlot?.hallId === hall.id && selectedSlot?.time === time;
-
-                                // Note: In real implementation, availability would be async/pre-fetched. 
-                                // For this refactor, we are using the service structure but keeping simple sync check logic 
-                                // would require async calls for each button which is bad. 
-                                // Optimally, getHalls would return availability map. 
-                                // We'll trust the visual "taken" simulation is mostly static for now to update UI structure.
+                                const isBooked = bookedSlots.has(`${hall.id}-${time}`);
 
                                 return (
                                     <button
                                         key={time}
-                                        onClick={() => setSelectedSlot({ hallId: hall.id, time })}
+                                        disabled={isBooked}
+                                        onClick={() => !isBooked && setSelectedSlot({ hallId: hall.id, time })}
                                         className={cn(
                                             "text-xs py-1.5 rounded-md border transition-all",
-                                            isSelected
-                                                ? "bg-primary text-white border-primary shadow-sm scale-105 font-medium"
-                                                : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:text-primary"
+                                            isBooked
+                                                ? "bg-red-50/50 dark:bg-red-900/10 border-red-200 dark:border-red-800/50 text-red-300 cursor-not-allowed decoration-slice opacity-60"
+                                                : isSelected
+                                                    ? "bg-primary text-white border-primary shadow-sm scale-105 font-medium"
+                                                    : "bg-emerald-50 dark:bg-emerald-900/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 hover:border-emerald-500 hover:shadow-sm"
                                         )}
                                     >
                                         {time}
