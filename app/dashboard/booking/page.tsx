@@ -7,7 +7,10 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { bookingService, Hall } from "@/services/bookingService";
 
+import { useAuth } from "@/context/AuthContext";
+
 export default function BookingPage() {
+    const { user } = useAuth();
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedSlot, setSelectedSlot] = useState<{ hallId: string, time: string } | null>(null);
@@ -65,12 +68,16 @@ export default function BookingPage() {
         if (!selectedSlot) return;
         setIsBooking(true);
 
-        // Simulate user ID from auth context in real app
+        // Simulating Purpose Prompt (In real app, use a Modal)
+        const purpose = prompt("What is the purpose of this booking?", "Class/Event") || "General";
+
         const result = await bookingService.bookSlot({
             hallId: selectedSlot.hallId,
             time: selectedSlot.time,
             date: selectedDate,
-            userId: "mock-user"
+            userId: user?.id || "guest",
+            purpose,
+            userName: user?.name || "Guest"
         });
 
         alert(result.message);

@@ -9,10 +9,14 @@ export interface Hall {
 }
 
 export interface Booking {
+    id?: string;
     hallId: string;
     time: string;
     date: Date;
     userId: string;
+    purpose: string;
+    status: 'Pending' | 'Approved' | 'Rejected';
+    userName?: string; // Cache for display
 }
 
 const HALLS_COLLECTION = "halls";
@@ -87,10 +91,10 @@ export const bookingService = {
     },
 
     // 3. Book Slot
-    bookSlot: async (booking: Booking): Promise<{ success: boolean; message: string }> => {
+    bookSlot: async (booking: Omit<Booking, 'id' | 'status'>): Promise<{ success: boolean; message: string }> => {
         const dateStr = booking.date.toISOString().split('T')[0];
 
-        // Optimistic check (Race conditions possible without Transaction, but acceptable for prototype)
+        // Optimistic check
         const isAvailable = await bookingService.checkAvailability(booking.hallId, booking.time, booking.date);
 
         if (!isAvailable) {
@@ -100,13 +104,49 @@ export const bookingService = {
         try {
             await addDoc(collection(db, BOOKINGS_COLLECTION), {
                 ...booking,
-                dateStr, // Helper for querying
+                status: 'Pending', // Default to Pending for approval workflow
+                dateStr,
                 createdAt: new Date().toISOString()
             });
-            return { success: true, message: "Booking confirmed" };
+            return { success: true, message: "Booking request sent! Waiting for approval." };
         } catch (error) {
             console.error("Booking error:", error);
             return { success: false, message: "Failed to book slot" };
+        }
+    },
+
+    // 4. User Bookings (Student Dashboard)
+    subscribeToUserBookings: (userId: string, callback: (bookings: Booking[]) => void) => {
+        const q = query(
+            collection(db, BOOKINGS_COLLECTION),
+            where("userId", "==", userId)
+        );
+        return onSnapshot(q, (snapshot) => {
+            const bookings = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Booking));
+            // Sort by Date (newest first or future first could be complex without index, doing in JS)
+            bookings.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            callback(bookings);
+        });
+    },
+
+    // 5. All Bookings (Teacher Dashboard)
+    subscribeToAllBookings: (callback: (bookings: Booking[]) => void) => {
+        const q = collection(db, BOOKINGS_COLLECTION);
+        return onSnapshot(q, (snapshot) => {
+            const bookings = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Booking));
+            bookings.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Newest created/date
+            callback(bookings);
+        });
+    },
+
+    // 6. Approve/Reject
+    updateBookingStatus: async (bookingId: string, status: 'Approved' | 'Rejected') => {
+        try {
+            await setDoc(doc(db, BOOKINGS_COLLECTION, bookingId), { status }, { merge: true });
+            return true;
+        } catch (e) {
+            console.error("Error updating status", e);
+            return false;
         }
     }
 };

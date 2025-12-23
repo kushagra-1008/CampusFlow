@@ -1,29 +1,52 @@
 "use client";
 
-import { useState } from "react";
-import { Check, X, Clock, CalendarDays, MoreVertical, Search, ArrowUpRight, Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Check, X, Clock, CalendarDays, MoreVertical, Search, ArrowUpRight, Plus, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { parseISO, format } from "date-fns";
-
-// Mock Data
-const APPROVAL_REQUESTS = [
-    { id: 1, type: "Meeting", title: "Project Review: CampusFlow", from: "Kushagra Singh", time: "Today, 4:00 PM", status: "Pending", priority: "High" },
-    { id: 2, type: "Hall Booking", title: "Coding Club Session (LT-5)", from: "Ravi Kumar", time: "Tomorrow, 6:00 PM", status: "Pending", priority: "Normal" },
-];
-
-const MY_BOOKINGS = [
-    { id: 101, hall: "LT-5", date: "2025-12-24T18:00:00", purpose: "Coding Club Session", status: "Approved" },
-    { id: 102, hall: "OAT", date: "2025-12-28T17:00:00", purpose: "Drama Rehearsal", status: "Pending" },
-];
+import { bookingService, Booking } from "@/services/bookingService";
 
 export default function TheFlowDashboard() {
     const { user } = useAuth();
     const [activeTab, setActiveTab] = useState("All");
+    const [bookings, setBookings] = useState<Booking[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (!user) return;
+        setIsLoading(true);
+
+        let unsubscribe: () => void;
+
+        if (user.role === "Student") {
+            unsubscribe = bookingService.subscribeToUserBookings(user.id, (data) => {
+                setBookings(data);
+                setIsLoading(false);
+            });
+        } else {
+            unsubscribe = bookingService.subscribeToAllBookings((data) => {
+                setBookings(data);
+                setIsLoading(false);
+            });
+        }
+
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
+    }, [user]);
 
     if (!user) return null;
+
+    // Derived State
+    const activeBookingsCount = bookings.filter(b => b.status === 'Approved' || b.status === 'Pending').length;
+    const nextEvent = bookings.find(b => new Date(b.date) > new Date());
+
+    // Teacher Specific Derived State
+    const pendingApprovals = bookings.filter(b => b.status === "Pending");
+    const todaysAppointments = bookings.filter(b => new Date(b.date).toDateString() === new Date().toDateString()).length;
 
     // --- STUDENT VIEW ---
     if (user.role === "Student") {
@@ -41,13 +64,23 @@ export default function TheFlowDashboard() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                        <div className="text-sm font-medium text-slate-500 mb-2">Active Bookings</div>
-                        <div className="text-3xl font-bold text-slate-900 dark:text-white">{MY_BOOKINGS.length}</div>
+                        <div className="text-sm font-medium text-slate-500 mb-2">My Requests</div>
+                        <div className="text-3xl font-bold text-slate-900 dark:text-white">
+                            {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : bookings.length}
+                        </div>
                     </motion.div>
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="p-6 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800 shadow-sm">
                         <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-2">Next Event</div>
-                        <div className="text-xl font-bold text-blue-900 dark:text-blue-100">Coding Club Session</div>
-                        <div className="text-sm text-blue-700 dark:text-blue-300 mt-1">Tomorrow, 6:00 PM • LT-5</div>
+                        {nextEvent ? (
+                            <>
+                                <div className="text-xl font-bold text-blue-900 dark:text-blue-100">{nextEvent.purpose}</div>
+                                <div className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                                    {format(new Date(nextEvent.date), "PPP")} • {nextEvent.time} • {nextEvent.hallId}
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-blue-900 dark:text-blue-100 font-medium">No upcoming events</div>
+                        )}
                     </motion.div>
                 </div>
 
@@ -56,15 +89,20 @@ export default function TheFlowDashboard() {
                         <h2 className="font-bold text-lg text-slate-900 dark:text-white">Booking History</h2>
                     </div>
                     <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                        {MY_BOOKINGS.map(booking => (
+                        {bookings.length === 0 && !isLoading && (
+                            <div className="p-8 text-center text-slate-500">No bookings found. Start by booking a hall!</div>
+                        )}
+                        {bookings.map(booking => (
                             <div key={booking.id} className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                 <div>
                                     <div className="font-semibold text-slate-900 dark:text-white">{booking.purpose}</div>
-                                    <div className="text-sm text-slate-500">{booking.hall} • {format(parseISO(booking.date), "PPP p")}</div>
+                                    <div className="text-sm text-slate-500">{booking.hallId} • {format(new Date(booking.date), "PPP")} • {booking.time}</div>
                                 </div>
                                 <span className={cn(
                                     "px-3 py-1 rounded-full text-xs font-medium border",
-                                    booking.status === "Approved" ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-amber-50 text-amber-600 border-amber-200"
+                                    booking.status === "Approved" ? "bg-emerald-50 text-emerald-600 border-emerald-200" :
+                                        booking.status === "Rejected" ? "bg-red-50 text-red-600 border-red-200" :
+                                            "bg-amber-50 text-amber-600 border-amber-200"
                                 )}>
                                     {booking.status}
                                 </span>
@@ -91,9 +129,9 @@ export default function TheFlowDashboard() {
                         <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
                             <Clock className="w-5 h-5" />
                         </div>
-                        <span className="text-xs font-medium bg-white/20 px-2 py-1 rounded-full">+2 new</span>
+                        {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                     </div>
-                    <div className="text-3xl font-bold mb-1">{APPROVAL_REQUESTS.length}</div>
+                    <div className="text-3xl font-bold mb-1">{pendingApprovals.length}</div>
                     <div className="text-primary-foreground/80 text-sm">Pending Approvals</div>
                 </motion.div>
 
@@ -108,7 +146,7 @@ export default function TheFlowDashboard() {
                             <CalendarDays className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         </div>
                     </div>
-                    <div className="text-3xl font-bold text-slate-900 dark:text-white mb-1">8</div>
+                    <div className="text-3xl font-bold text-slate-900 dark:text-white mb-1">{todaysAppointments}</div>
                     <div className="text-slate-500 dark:text-slate-400 text-sm">Today's Appointments</div>
                 </motion.div>
             </div>
@@ -139,7 +177,10 @@ export default function TheFlowDashboard() {
                 </div>
 
                 <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                    {APPROVAL_REQUESTS.filter(r => activeTab === "All" || r.status === activeTab).map((req) => (
+                    {bookings.filter(r => activeTab === "All" || r.status === activeTab).length === 0 && (
+                        <div className="p-8 text-center text-slate-500">No requests found.</div>
+                    )}
+                    {bookings.filter(r => activeTab === "All" || r.status === activeTab).map((req) => (
                         <div key={req.id} className="p-6 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center justify-between">
                             <div className="flex items-start gap-4">
                                 <div className="w-10 h-10 rounded-full flex items-center justify-center border-2 border-amber-200 bg-amber-50 text-amber-600">
@@ -147,25 +188,42 @@ export default function TheFlowDashboard() {
                                 </div>
                                 <div>
                                     <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                                        {req.title}
-                                        {req.priority === "High" && <span className="w-2 h-2 rounded-full bg-red-500" />}
+                                        {req.purpose || "Booking Request"}
+                                        <span className={cn(
+                                            "px-2 py-0.5 rounded-full text-[10px] border",
+                                            req.status === "Approved" ? "bg-emerald-100 border-emerald-200 text-emerald-700" :
+                                                req.status === "Rejected" ? "bg-red-100 border-red-200 text-red-700" :
+                                                    "bg-amber-100 border-amber-200 text-amber-700"
+                                        )}>{req.status}</span>
                                     </h3>
                                     <div className="flex items-center gap-3 text-sm text-slate-500 mt-1">
-                                        <span>{req.from}</span>
+                                        <span>{req.userName || "Unknown"}</span>
                                         <span className="w-1 h-1 rounded-full bg-slate-300" />
-                                        <span>{req.time}</span>
+                                        <span>{req.hallId} ({req.time})</span>
+                                        <span className="w-1 h-1 rounded-full bg-slate-300" />
+                                        <span>{format(new Date(req.date), "MMM d")}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                <button className="p-2 rounded-full hover:bg-emerald-50 text-emerald-600 transition-colors" title="Approve">
-                                    <Check className="w-5 h-5" />
-                                </button>
-                                <button className="p-2 rounded-full hover:bg-red-50 text-red-600 transition-colors" title="Reject">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
+                            {req.status === 'Pending' && (
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => bookingService.updateBookingStatus(req.id!, 'Approved')}
+                                        className="p-2 rounded-full hover:bg-emerald-50 text-emerald-600 transition-colors"
+                                        title="Approve"
+                                    >
+                                        <Check className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={() => bookingService.updateBookingStatus(req.id!, 'Rejected')}
+                                        className="p-2 rounded-full hover:bg-red-50 text-red-600 transition-colors"
+                                        title="Reject"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>
