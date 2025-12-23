@@ -91,7 +91,7 @@ export const bookingService = {
     },
 
     // 3. Book Slot
-    bookSlot: async (booking: Omit<Booking, 'id' | 'status'>): Promise<{ success: boolean; message: string }> => {
+    bookSlot: async (booking: Omit<Booking, 'id' | 'status'> & { userRole: string }): Promise<{ success: boolean; message: string }> => {
         const dateStr = booking.date.toISOString().split('T')[0];
 
         // Optimistic check
@@ -101,14 +101,21 @@ export const bookingService = {
             return { success: false, message: "Slot already taken" };
         }
 
+        // Auto-approve if Faculty, otherwise Pending
+        const initialStatus = booking.userRole === 'Teacher' ? 'Approved' : 'Pending';
+        const message = initialStatus === 'Approved' ? "Booking confirmed!" : "Booking request sent! Waiting for approval.";
+
         try {
+            // Remove userRole from the object before saving to Firestore (it's consistent with schema)
+            const { userRole, ...bookingData } = booking;
+
             await addDoc(collection(db, BOOKINGS_COLLECTION), {
-                ...booking,
-                status: 'Pending', // Default to Pending for approval workflow
+                ...bookingData,
+                status: initialStatus,
                 dateStr,
                 createdAt: new Date().toISOString()
             });
-            return { success: true, message: "Booking request sent! Waiting for approval." };
+            return { success: true, message };
         } catch (error) {
             console.error("Booking error:", error);
             return { success: false, message: "Failed to book slot" };

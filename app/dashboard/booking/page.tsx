@@ -77,7 +77,8 @@ export default function BookingPage() {
             date: selectedDate,
             userId: user?.id || "guest",
             purpose,
-            userName: user?.name || "Guest"
+            userName: user?.name || "Guest",
+            userRole: user?.role || "Student"
         });
 
         alert(result.message);
