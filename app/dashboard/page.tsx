@@ -27,7 +27,16 @@ export default function TheFlowDashboard() {
                 setIsLoading(false);
             });
         } else {
+        } else {
             unsubscribe = bookingService.subscribeToAllBookings((data) => {
+                // Strict Sort: Date (Asc) -> Time (Asc)
+                // We normalize Date to midnight to trust the 'time' string for slot ordering
+                data.sort((a, b) => {
+                    const dateA = new Date(a.date).setHours(0, 0, 0, 0);
+                    const dateB = new Date(b.date).setHours(0, 0, 0, 0);
+                    if (dateA !== dateB) return dateA - dateB;
+                    return a.time.localeCompare(b.time);
+                });
                 setBookings(data);
                 setIsLoading(false);
             });
