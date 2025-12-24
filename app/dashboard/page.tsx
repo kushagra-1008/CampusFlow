@@ -27,7 +27,7 @@ export default function TheFlowDashboard() {
                 setIsLoading(false);
             });
         } else {
-        } else {
+
             unsubscribe = bookingService.subscribeToAllBookings((data) => {
                 // Strict Sort: Date (Asc) -> Time (Asc)
                 // We normalize Date to midnight to trust the 'time' string for slot ordering
