@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, X, Clock, CalendarDays, MoreVertical, Search, ArrowUpRight, Plus, Loader2, Trash2, Edit2 } from "lucide-react";
+import { Check, X, Clock, CalendarDays, MoreVertical, Search, ArrowUpRight, Plus, Loader2, Trash2, Edit2, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -137,7 +137,7 @@ export default function TheFlowDashboard() {
                                     })}
                                     className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-slate-500"
                                 >
-                                    <ArrowUpRight className="w-4 h-4 rotate-[-135deg]" /> {/* Hack for Left Arrow if Chevron not imported, but wait, Chevron IS imported? Checking Page imports... */}
+                                    <ChevronLeft className="w-4 h-4" />
                                 </button>
                                 <div className="px-3 text-xs font-semibold text-slate-700 dark:text-slate-300 min-w-[100px] text-center">
                                     {format(selectedEventDate, "EEE, MMM d")}
@@ -150,7 +150,7 @@ export default function TheFlowDashboard() {
                                     })}
                                     className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-slate-500"
                                 >
-                                    <ArrowUpRight className="w-4 h-4 rotate-45" />
+                                    <ChevronRight className="w-4 h-4" />
                                 </button>
                             </div>
                         </div>

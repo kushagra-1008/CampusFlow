@@ -17,7 +17,9 @@ CampusFlow is the official (prototype) resource management and communication pla
 - **Styling**: Tailwind CSS v4 (Alpha/PostCSS)
 - **Icons**: Lucide React
 - **Animations**: Framer Motion
-- **State Management**: React Context (`AuthContext`, `SocketContext`)
+
+- **State Management**: React Context (`AuthContext`) + Firebase Realtime Listeners
+- **Backend / Services**: Firebase (Authentication, Firestore, Storage)
 
 ## Getting Started
 
@@ -33,8 +35,11 @@ CampusFlow is the official (prototype) resource management and communication pla
     Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 
-### 3. Firebase Setup (Required for persistence)
-Create a `.env.local` file in the `web` directory with your Firebase project credentials:
+### 3. Firebase Setup (Required)
+Create a `.env.local` file in the `web` directory with your Firebase project credentials.
+This application relies on Firebase for:
+*   **Authentication**: Handling access for Students (`@lnmiit.ac.in`) and Faculty.
+*   **Firestore**: Storing Bookings, Users, and Events.
 
 ```env
 NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
@@ -45,16 +50,6 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 ```
 
-### 4. Run Development Server
-
-- **Context API**:
-    - `AuthContext`: Manages user sessions (mock persisted via LocalStorage).
-    - `SocketContext`: Simulates WebSocket connections (latency, message delivery) for Chat.
-- **Service Layer**:
-    - `services/bookingService`: Abstracts Hall data and booking logic.
-    - `services/facultyService`: Handles faculty directory and status logic.
-- **Mock Data**: Currently, the application uses sophisticated mock data services (`services/*`) that mimic async API calls, preparing the codebase for easy substitution with a real backend (e.g., Supabase/Firebase) in the future.
-
 ## Deployment
 
 This project is optimized for deployment on **Vercel**.
@@ -63,12 +58,13 @@ This project is optimized for deployment on **Vercel**.
 2.  Import project into Vercel.
 3.  **Environment Variables**:
     - Go to "Environment Variables" in the Vercel deployment screen.
-    - Copy all keys from your local `.env.local` and add them there (e.g. `NEXT_PUBLIC_FIREBASE_API_KEY`, etc.).
+    - Copy all keys from your local `.env.local` and add them there.
 4.  Framework Preset: **Next.js**.
 5.  Deploy.
 
 ## Future Roadmap
 
-- Integrate Supabase for real PostgreSQL database.
-- Replace `SocketContext` simulation with `socket.io` or Supabase Realtime.
-- Implementing Admin role for Approval workflows.
+- **Admin Role**: Enhanced permissions for detailed audit logs and system-wide overrides.
+- **Push Notifications**: Integration with FCM for real-time alerts on booking status changes.
+- **Mobile Native**: React Native port for iOS/Android.
+- **Advanced Analytics**: Usage heatmaps for Lecture Theaters to optimize scheduling.
