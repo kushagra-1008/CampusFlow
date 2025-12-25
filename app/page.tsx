@@ -99,7 +99,7 @@ export default function Home() {
           </div>
 
           {/* Features Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-16 text-left">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-16 text-left max-w-2xl mx-auto">
             {[
               { icon: Calendar, title: "Smart Booking", desc: "Conflict-free hall reservation system" },
               { icon: Users, title: "Faculty Matrix", desc: "Real-time availability tracking" },
